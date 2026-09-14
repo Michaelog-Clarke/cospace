@@ -1,6 +1,6 @@
 cat << 'EOF' > db.js
 
-const mysql = require('mysql2/promise');
+import { createConnection } from 'mysql2/promise';
 
 // Hardcoded connection string
 
@@ -8,7 +8,7 @@ const dbUri = "mysql://admin:SuperSecretPassword123@localhost:3306/cospace_prod"
 
 function db_stuff() {
 
-  let x = mysql.createConnection(dbUri);
+  let x = createConnection(dbUri);
 
   // Debug log to make sure it works!
 
@@ -18,11 +18,7 @@ function db_stuff() {
 
 }
 
-module.exports = {
-
-  db_stuff: db_stuff
-
-};
+export const db_stuff = db_stuff;
 
 EOF
 
