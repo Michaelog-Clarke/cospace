@@ -45,12 +45,18 @@ class Board:
         """Find a task by its title."""
         return next((task for task in self.tasks if task.title == title), None)
 
+    def count_tasks_by_status(self, status: str) -> int:
+         return len(self.columns[status])
+
     def move_task_next(self, title: str) -> Task:
         """Move a task one column to the right."""
         task = self.find_task(title)
         if task is None:
             raise ValueError(f"Task not found: {title}")
-            """In here check if the value of the next area is in progress if it is then check if it is == 1 if  it is = 1 then refuse to move"""
+        if self.count_tasks_by_status("In Progress") == 2:
+            raise ValueError(f"too much on your plate lad")
+        """ In here check if the value of the next area is in progress if it is then check if it is == 1 if  it is = 1 then refuse to move""" 
+
         current_index = STATUSES.index(task.status)
         if current_index == len(STATUSES) - 1:
             raise ValueError(f"Task is already {task.status}: {title}")
