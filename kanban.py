@@ -39,17 +39,23 @@ class Board:
         task = Task(title=title, description=description, status=status)
         self.columns[status].append(task)
         return task
+ 
 
     def find_task(self, title: str) -> Optional[Task]:
         """Find a task by its title."""
         return next((task for task in self.tasks if task.title == title), None)
+
+    def count_tasks_by_status(self, status: str) -> int:
+         return len(self.columns[status])
 
     def move_task_next(self, title: str) -> Task:
         """Move a task one column to the right."""
         task = self.find_task(title)
         if task is None:
             raise ValueError(f"Task not found: {title}")
-            """In here check if the value of the next area is in progress if it is then check if it is == 1 if  it is = 1 then refuse to move"""
+        if self.count_tasks_by_status("In Progress") == 2:
+            raise ValueError(f"too much on your plate lad")
+
         current_index = STATUSES.index(task.status)
         if current_index == len(STATUSES) - 1:
             raise ValueError(f"Task is already {task.status}: {title}")
@@ -58,6 +64,24 @@ class Board:
         task.status = STATUSES[current_index + 1]
         self.columns[task.status].append(task)
         return task
+
+    def move_task_previous(self, title: str) -> Task:
+        """Move a task one column to the left."""
+        task = self.find_task(title)
+        if task is None:
+            raise ValueError(f"Task not found: {title}")
+        current_index = STATUSES.index(task.status)
+        if current_index == 0:
+            raise ValueError(f"{title} cannot be moved back")
+
+        confirm = input("Type yes to confirm ")
+        if confirm == "yes":
+            self.columns[task.status].remove(task)
+            task.status = STATUSES[current_index - 1]
+            self.columns[task.status].append(task)
+            return task
+        else:
+            print("Confirm failed, task not moved back")
 
     def display(self) -> str:
         """Return the board grouped into readable status sections."""
@@ -115,7 +139,7 @@ def create_desk_booking_board() -> Board:
 def run_commands(board: Board) -> None:
     """Run the basic interactive commands for a board."""
     print("Desk Booking Kanban")
-    print("Commands: show, add, move, help, quit")
+    print("Commands: show, add, move, back, help, quit")
     while True:
         command = input("\nkanban> ").strip().lower()
 
@@ -138,10 +162,18 @@ def run_commands(board: Board) -> None:
                 print(f"Moved '{task.title}' to {task.status}.")
             except ValueError as error:
                 print(error)
+        elif command == "back":
+            title = input("Task title: ").strip()
+            try:
+                task = board.move_task_previous(title)
+                print(f"Moved '{task.title}' to {task.status}.")
+            except ValueError as error:
+                print(error)
         elif command == "help":
             print("show - display tasks in their columns")
             print("add  - add a task to To Do")
             print("move - move a task to the next column")
+            print("back - move a task to the previous column")
             print("quit - exit the board")
         else:
             print("Unknown command. Type 'help' to see available commands.")
