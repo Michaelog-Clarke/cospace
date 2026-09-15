@@ -55,7 +55,6 @@ class Board:
             raise ValueError(f"Task not found: {title}")
         if self.count_tasks_by_status("In Progress") == 2:
             raise ValueError(f"too much on your plate lad")
-        """ In here check if the value of the next area is in progress if it is then check if it is == 1 if  it is = 1 then refuse to move""" 
 
         current_index = STATUSES.index(task.status)
         if current_index == len(STATUSES) - 1:
