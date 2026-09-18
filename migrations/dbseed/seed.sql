@@ -1,13 +1,13 @@
 -- 1. Seed Teams (3 Teams)
-INSERT INTO teams (name, department) VALUES
-('Alpha Squad', 'Engineering'),
-('Beta Builders', 'Product'),
-('Gamma Growth', 'Marketing');
+-- INSERT INTO teams (name, department) VALUES
+-- ('Alpha Squad', 'Engineering'),
+-- ('Beta Builders', 'Product'),
+-- ('Gamma Growth', 'Marketing');
 
 -- 2. Seed Users / Colleagues (8 Users distributed across teams)
 -- (Assuming Alpha Squad is team 1, Beta Builders is team 2, Gamma Growth is team 3)
 INSERT INTO users (first_name, last_name, email, team_id) VALUES
-('Alice', 'Smith', 'alice.smith@example.com', 1),
+--('Alice', 'Smith', 'alice.smith@example.com', 1),
 ('Bob', 'Jones', 'bob.jones@example.com', 1),
 ('Charlie', 'Brown', 'charlie.brown@example.com', 1),
 ('Diana', 'Prince', 'diana.prince@example.com', 2),
