@@ -1,13 +1,13 @@
 import type { Request, Response } from "express";
 
 import { BookingRepository, type BookingInput } from "../repositories/booking.repository.js";
+import type { BookingWithId } from "../schemas/booking.schema.js";
 import { BookingService } from "../services/booking.service.js";
-import type { Booking } from "../types/booking.js";
 
-const defaultBookings: Booking[] = [
-  { id: "1", desk: "A1", floor: 1, date: "2026-09-22", active: true },
-  { id: "2", desk: "B4", floor: 2, date: "2026-09-23", active: false },
-  { id: "3", desk: "C7", floor: 3, date: "2026-09-24", active: true },
+const defaultBookings: BookingWithId[] = [
+  { id: "1", desk: "A1", floor: "Floor 1", date: "2026-09-22", active: true },
+  { id: "2", desk: "B4", floor: "Floor 2", date: "2026-09-23", active: false },
+  { id: "3", desk: "C7", floor: "Floor 3", date: "2026-09-24", active: true },
 ];
 
 export class BookingController {
