@@ -1,5 +1,5 @@
 import { BookingRepository, type BookingInput } from "../repositories/booking.repository.js";
-import type { Booking } from "../routes/bookings.js";
+import type { Booking } from "../types/booking.js";
 
 export class BookingService {
   constructor(

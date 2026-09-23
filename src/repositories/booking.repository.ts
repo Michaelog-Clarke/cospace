@@ -1,4 +1,4 @@
-import type { Booking } from "../routes/bookings.js";
+import type { Booking } from "../types/booking.js";
 
 export type BookingInput = Omit<Booking, "id">;
 

@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 
 import { BookingRepository, type BookingInput } from "../repositories/booking.repository.js";
-import type { Booking } from "../routes/bookings.js";
 import { BookingService } from "../services/booking.service.js";
+import type { Booking } from "../types/booking.js";
 
 const defaultBookings: Booking[] = [
   { id: "1", desk: "A1", floor: 1, date: "2026-09-22", active: true },
