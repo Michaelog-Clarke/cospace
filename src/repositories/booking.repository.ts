@@ -1,29 +1,29 @@
-import type { Booking } from "../types/booking.js";
+import type { Booking, BookingWithId } from "../schemas/booking.schema.js";
 
-export type BookingInput = Omit<Booking, "id">;
+export type BookingInput = Booking;
 
 export class BookingRepository {
-  private readonly bookings: Booking[];
+  private readonly bookings: BookingWithId[];
 
-  constructor(initialBookings: Booking[] = []) {
+  constructor(initialBookings: BookingWithId[] = []) {
     this.bookings = [...initialBookings];
   }
 
-  findAll(): Booking[] {
+  findAll(): BookingWithId[] {
     return [...this.bookings];
   }
 
-  findById(id: string): Booking | undefined {
+  findById(id: string): BookingWithId | undefined {
     return this.bookings.find((booking) => booking.id === id);
   }
 
-  create(booking: BookingInput): Booking {
+  create(booking: BookingInput): BookingWithId {
     const highestId = this.bookings.reduce((max, item) => {
       const numericId = Number(item.id);
       return Number.isFinite(numericId) ? Math.max(max, numericId) : max;
     }, 0);
 
-    const newBooking: Booking = {
+    const newBooking: BookingWithId = {
       id: String(highestId + 1),
       ...booking,
     };
@@ -33,7 +33,7 @@ export class BookingRepository {
     return newBooking;
   }
 
-  update(id: string, data: Partial<BookingInput>): Booking | undefined {
+  update(id: string, data: Partial<BookingInput>): BookingWithId | undefined {
     const index = this.bookings.findIndex((booking) => booking.id === id);
 
     if (index === -1) {
@@ -46,7 +46,7 @@ export class BookingRepository {
       return undefined;
     }
 
-    const updatedBooking: Booking = {
+    const updatedBooking: BookingWithId = {
       ...currentBooking,
       ...data,
       id,
@@ -57,7 +57,7 @@ export class BookingRepository {
     return updatedBooking;
   }
 
-  delete(id: string): Booking | undefined {
+  delete(id: string): BookingWithId | undefined {
     const index = this.bookings.findIndex((booking) => booking.id === id);
 
     if (index === -1) {

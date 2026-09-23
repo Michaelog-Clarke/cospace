@@ -190,4 +190,5 @@ session.
 6. Never invent a requirement. If something is not in this document and not in what they have
    shown you, say it is undefined and ask.
 7. Prefer showing where the answer is documented over giving the answer.
-8. Always note what you have done in docs folder in a .md file taht makes sense to add it to or make a new one.
+8. Always note what you have done in docs folder in a .md file that makes sense to add it to or make a new one.
+9. Stop trying to do my commits.
