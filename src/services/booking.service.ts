@@ -33,4 +33,32 @@ export class BookingService {
   delete(id: string): BookingWithId | undefined {
     return this.bookingRepository.delete(id);
   }
+
+  getPaginatedShifts(page: number, limit: number): {
+    data: BookingWithId[];
+    meta: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  } {
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.max(1, limit);
+
+    const total = this.bookingRepository.count();
+    const totalPages = Math.max(1, Math.ceil(total / safeLimit));
+    const skip = (safePage - 1) * safeLimit;
+    const data = this.bookingRepository.findPaginated(skip, safeLimit);
+
+    return {
+      data,
+      meta: {
+        page: safePage,
+        limit: safeLimit,
+        total,
+        totalPages,
+      },
+    };
+  }
 }

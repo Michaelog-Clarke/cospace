@@ -13,6 +13,18 @@ export class BookingRepository {
     return [...this.bookings];
   }
 
+  findPaginated(skip: number, limit: number): BookingWithId[] {
+    const safeSkip = Math.max(0, skip);
+    const safeLimit = Math.max(0, limit);
+
+
+    return this.bookings.slice(safeSkip, safeSkip + safeLimit);
+  }
+
+  count(): number {
+    return this.bookings.length;
+  }
+
   findById(id: string): BookingWithId | undefined {
     return this.bookings.find((booking) => booking.id === id);
   }

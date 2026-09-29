@@ -17,9 +17,19 @@ export class BookingController {
     ),
   ) {}
 
-  findAll = async (_req: Request, res: Response): Promise<void> => {
+  findAll = async (req: Request, res: Response): Promise<void> => {
     try {
-      const bookings = this.bookingService.findAll();
+      const pageParam = req.query.page;
+      const limitParam = req.query.limit;
+
+      const page = Number(Array.isArray(pageParam) ? pageParam[0] : pageParam ?? "1");
+      const limit = Number(Array.isArray(limitParam) ? limitParam[0] : limitParam ?? "10");
+
+      const bookings = this.bookingService.getPaginatedShifts(
+        Number.isFinite(page) ? page : 1,
+        Number.isFinite(limit) ? limit : 10,
+      );
+
       res.status(200).json(bookings);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
