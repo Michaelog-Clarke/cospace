@@ -1,8 +1,22 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 
+import { BadRequestError } from "../errors/badRequestError.js";
+import { NotFoundError } from "../errors/notFoundError.js";
+import { HTTP_STATUS } from "../constants/httpStatus.js";
 import { BookingRepository, type BookingInput } from "../repositories/booking.repository.js";
 import type { BookingWithId } from "../schemas/booking.schema.js";
 import { BookingService } from "../services/booking.service.js";
+
+const parseQueryInteger = (value: unknown, fallback: number): number => {
+  const queryValue = Array.isArray(value) ? value[0] : value;
+
+  if (typeof queryValue !== "string") {
+    return fallback;
+  }
+
+  const parsedValue = Number.parseInt(queryValue, 10);
+  return Number.isFinite(parsedValue) ? parsedValue : fallback;
+};
 
 const defaultBookings: BookingWithId[] = [
   { id: "1", desk: "A1", floor: "Floor 1", date: "2026-09-22", active: true },
@@ -17,105 +31,76 @@ export class BookingController {
     ),
   ) {}
 
-  findAll = async (_req: Request, res: Response): Promise<void> => {
+  findAll = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const bookings = this.bookingService.findAll();
-      res.status(200).json(bookings);
+      const page = parseQueryInteger(req.query.page, 1);
+      const limit = parseQueryInteger(req.query.limit, 10);
+
+      const bookings = this.bookingService.getPaginatedShifts(page, limit);
+
+      res.status(HTTP_STATUS.OK).json(bookings);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      res.status(500).json({ error: message });
+      next(error);
     }
   };
 
-  findById = async (req: Request, res: Response): Promise<void> => {
+  findById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const bookingId = req.params.id;
 
       if (typeof bookingId !== "string") {
-        res.status(400).json({ error: "Invalid booking id" });
-        return;
+        throw new BadRequestError("Invalid booking id");
       }
 
       const booking = this.bookingService.findById(bookingId);
 
       if (!booking) {
-        res.status(404).json({ error: "Booking not found" });
-        return;
+        throw new NotFoundError("Booking not found");
       }
 
-      res.status(200).json(booking);
+      res.status(HTTP_STATUS.OK).json(booking);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      res.status(500).json({ error: message });
+      next(error);
     }
   };
 
-  create = async (req: Request, res: Response): Promise<void> => {
+  create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const booking = this.bookingService.create(req.body as BookingInput);
-      res.status(201).json(booking);
+      res.status(HTTP_STATUS.CREATED).json(booking);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-
-      if (message.includes("Desk name")) {
-        res.status(400).json({ error: message });
-        return;
-      }
-
-      res.status(500).json({ error: message });
+      next(error);
     }
   };
 
-  update = async (req: Request, res: Response): Promise<void> => {
+  update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const bookingId = req.params.id;
 
       if (typeof bookingId !== "string") {
-        res.status(400).json({ error: "Invalid booking id" });
-        return;
+        throw new BadRequestError("Invalid booking id");
       }
 
       const booking = this.bookingService.update(bookingId, req.body as Partial<BookingInput>);
 
-      if (!booking) {
-        res.status(404).json({ error: "Booking not found" });
-        return;
-      }
-
-      res.status(200).json(booking);
+      res.status(HTTP_STATUS.OK).json(booking);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-
-      if (message.includes("Desk name")) {
-        res.status(400).json({ error: message });
-        return;
-      }
-
-      res.status(500).json({ error: message });
+      next(error);
     }
   };
 
-  delete = async (req: Request, res: Response): Promise<void> => {
+  delete = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const bookingId = req.params.id;
 
       if (typeof bookingId !== "string") {
-        res.status(400).json({ error: "Invalid booking id" });
-        return;
+        throw new BadRequestError("Invalid booking id");
       }
 
-      const deletedBooking = this.bookingService.delete(bookingId);
-
-      if (!deletedBooking) {
-        res.status(404).json({ error: "Booking not found" });
-        return;
-      }
-
-      res.status(204).send();
+      this.bookingService.delete(bookingId);
+      res.status(HTTP_STATUS.NO_CONTENT).send();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      res.status(500).json({ error: message });
+      next(error);
     }
   };
 }
-
