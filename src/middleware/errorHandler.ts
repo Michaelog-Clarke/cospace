@@ -1,5 +1,11 @@
 import type { NextFunction, Request, Response } from "express";
-import { ZodError } from "zod";
+import { HTTP_STATUS } from "../constants/httpStatus.js";
+import { AppError } from "../utils/appError.js";
+
+type BodyParserError = SyntaxError & {
+  status?: number;
+  type?: string;
+};
 
 export const errorHandler = (
   error: unknown,
@@ -7,22 +13,30 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction,
 ): void => {
-  console.error("Unhandled error:", error);
-
-  if (error instanceof ZodError) {
-    const issues = error.issues.map((issue) => ({
-      field: issue.path.length > 0 ? issue.path.join(".") : "body",
-      message: issue.message,
-    }));
-
-    res.status(400).json({
+  if (
+    error instanceof SyntaxError &&
+    (error as BodyParserError).status === HTTP_STATUS.BAD_REQUEST &&
+    (error as BodyParserError).type === "entity.parse.failed"
+  ) {
+    res.status(HTTP_STATUS.BAD_REQUEST).json({
       status: "fail",
-      message: "Validation failed",
-      errors: issues,
+      message: "Malformed JSON request body",
     });
     return;
   }
 
-  const message = error instanceof Error ? error.message : "Internal Server Error";
-  res.status(500).json({ error: message });
+  if (error instanceof AppError && error.isOperational) {
+    res.status(error.statusCode).json({
+      status: error.status,
+      message: error.message,
+      details: error.details,
+    });
+    return;
+  }
+
+  console.error("Unhandled error:", error);
+  res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+    status: "error",
+    message: "Something went wrong on our end",
+  });
 };

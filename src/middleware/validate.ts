@@ -1,18 +1,21 @@
 import type { NextFunction, Request, Response } from "express";
 import type { ZodSchema } from "zod";
+import { BadRequestError } from "../errors/badRequestError.js";
 
 export const validateSchema = <T>(schema: ZodSchema<T>) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     const result = schema.safeParse(req.body);
 
     if (!result.success) {
-      res.status(400).json({
-        error: "Validation failed",
-        details: result.error.issues.map((issue) => ({
-          path: issue.path.length > 0 ? issue.path.join(".") : "body",
-          message: issue.message,
-        })),
-      });
+      next(
+        new BadRequestError(
+          "Validation failed",
+          result.error.issues.map((issue) => ({
+            path: issue.path.length > 0 ? issue.path.join(".") : "body",
+            message: issue.message,
+          })),
+        ),
+      );
       return;
     }
 
@@ -31,10 +34,7 @@ export const validateRequiredFields = (requiredFields: string[]) => {
     });
 
     if (missingFields.length > 0) {
-      res.status(400).json({
-        error: "Missing required fields",
-        missingFields,
-      });
+      next(new BadRequestError("Missing required fields", { missingFields }));
       return;
     }
 

@@ -1,3 +1,5 @@
+import { BadRequestError } from "../errors/badRequestError.js";
+import { NotFoundError } from "../errors/notFoundError.js";
 import { BookingRepository, type BookingInput } from "../repositories/booking.repository.js";
 import type { BookingWithId } from "../schemas/booking.schema.js";
 
@@ -18,22 +20,34 @@ export class BookingService {
 
   create(booking: BookingInput): BookingWithId {
     if (booking.desk.length < 3) {
-      throw new Error("Desk name must be at least 3 characters long");
+      throw new BadRequestError("Desk name must be at least 3 characters long");
     }
 
     return this.bookingRepository.create(booking);
   }
 
-  update(id: string, data: Partial<BookingInput>): BookingWithId | null {
+  update(id: string, data: Partial<BookingInput>): BookingWithId {
     if (data.desk !== undefined && data.desk.length < 3) {
-      throw new Error("Desk name must be at least 3 characters long");
+      throw new BadRequestError("Desk name must be at least 3 characters long");
     }
 
-    return this.bookingRepository.update(id, data) ?? null;
+    const booking = this.bookingRepository.update(id, data);
+
+    if (!booking) {
+      throw new NotFoundError("Booking not found");
+    }
+
+    return booking;
   }
 
-  delete(id: string): BookingWithId | null {
-    return this.bookingRepository.delete(id) ?? null;
+  delete(id: string): BookingWithId {
+    const booking = this.bookingRepository.delete(id);
+
+    if (!booking) {
+      throw new NotFoundError("Booking not found");
+    }
+
+    return booking;
   }
 
   getPaginatedShifts(page: number, limit: number): {
