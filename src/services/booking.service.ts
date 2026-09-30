@@ -1,6 +1,8 @@
 import { BookingRepository, type BookingInput } from "../repositories/booking.repository.js";
 import type { BookingWithId } from "../schemas/booking.schema.js";
 
+const MAX_PAGE_SIZE = 50;
+
 export class BookingService {
   constructor(
     private readonly bookingRepository: BookingRepository = new BookingRepository(),
@@ -22,16 +24,16 @@ export class BookingService {
     return this.bookingRepository.create(booking);
   }
 
-  update(id: string, data: Partial<BookingInput>): BookingWithId | undefined {
+  update(id: string, data: Partial<BookingInput>): BookingWithId | null {
     if (data.desk !== undefined && data.desk.length < 3) {
       throw new Error("Desk name must be at least 3 characters long");
     }
 
-    return this.bookingRepository.update(id, data);
+    return this.bookingRepository.update(id, data) ?? null;
   }
 
-  delete(id: string): BookingWithId | undefined {
-    return this.bookingRepository.delete(id);
+  delete(id: string): BookingWithId | null {
+    return this.bookingRepository.delete(id) ?? null;
   }
 
   getPaginatedShifts(page: number, limit: number): {
@@ -44,7 +46,7 @@ export class BookingService {
     };
   } {
     const safePage = Math.max(1, page);
-    const safeLimit = Math.max(1, limit);
+    const safeLimit = Math.min(MAX_PAGE_SIZE, Math.max(1, limit));
 
     const total = this.bookingRepository.count();
     const totalPages = Math.max(1, Math.ceil(total / safeLimit));

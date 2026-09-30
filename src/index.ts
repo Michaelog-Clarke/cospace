@@ -19,6 +19,9 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/bookings", bookingRouter);
 app.use(errorHandler);
 
+app.get("/boom-unexpected", () => {
+  throw new Error("database connection failed");
+});
 const PORT = 5000;
 
 app.listen(PORT, () => {

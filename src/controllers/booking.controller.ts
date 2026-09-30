@@ -4,6 +4,17 @@ import { BookingRepository, type BookingInput } from "../repositories/booking.re
 import type { BookingWithId } from "../schemas/booking.schema.js";
 import { BookingService } from "../services/booking.service.js";
 
+const parseQueryInteger = (value: unknown, fallback: number): number => {
+  const queryValue = Array.isArray(value) ? value[0] : value;
+
+  if (typeof queryValue !== "string") {
+    return fallback;
+  }
+
+  const parsedValue = Number.parseInt(queryValue, 10);
+  return Number.isFinite(parsedValue) ? parsedValue : fallback;
+};
+
 const defaultBookings: BookingWithId[] = [
   { id: "1", desk: "A1", floor: "Floor 1", date: "2026-09-22", active: true },
   { id: "2", desk: "B4", floor: "Floor 2", date: "2026-09-23", active: false },
@@ -19,16 +30,10 @@ export class BookingController {
 
   findAll = async (req: Request, res: Response): Promise<void> => {
     try {
-      const pageParam = req.query.page;
-      const limitParam = req.query.limit;
+      const page = parseQueryInteger(req.query.page, 1);
+      const limit = parseQueryInteger(req.query.limit, 10);
 
-      const page = Number(Array.isArray(pageParam) ? pageParam[0] : pageParam ?? "1");
-      const limit = Number(Array.isArray(limitParam) ? limitParam[0] : limitParam ?? "10");
-
-      const bookings = this.bookingService.getPaginatedShifts(
-        Number.isFinite(page) ? page : 1,
-        Number.isFinite(limit) ? limit : 10,
-      );
+      const bookings = this.bookingService.getPaginatedShifts(page, limit);
 
       res.status(200).json(bookings);
     } catch (error) {
@@ -128,4 +133,3 @@ export class BookingController {
     }
   };
 }
-
