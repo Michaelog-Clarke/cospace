@@ -1,56 +1,61 @@
-import { BadRequestError } from "../errors/badRequestError.js";
 import { NotFoundError } from "../errors/notFoundError.js";
-import { BookingRepository, type BookingInput } from "../repositories/booking.repository.js";
+import {
+  BookingRepository,
+  type BookingInput,
+  type BookingUpdateInput,
+} from "../repositories/booking.repository.js";
 import type { BookingWithId } from "../schemas/booking.schema.js";
 
 const MAX_PAGE_SIZE = 50;
+
+const isMissingRecordError = (error: unknown): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  error.code === "P2025";
 
 export class BookingService {
   constructor(
     private readonly bookingRepository: BookingRepository = new BookingRepository(),
   ) {}
 
-  findAll(): BookingWithId[] {
+  findAll(): Promise<BookingWithId[]> {
     return this.bookingRepository.findAll();
   }
 
-  findById(id: string): BookingWithId | undefined {
+  findById(id: number): Promise<BookingWithId | null> {
     return this.bookingRepository.findById(id);
   }
 
-  create(booking: BookingInput): BookingWithId {
-    if (booking.desk.length < 3) {
-      throw new BadRequestError("Desk name must be at least 3 characters long");
-    }
-
+  create(booking: BookingInput): Promise<BookingWithId> {
     return this.bookingRepository.create(booking);
   }
 
-  update(id: string, data: Partial<BookingInput>): BookingWithId {
-    if (data.desk !== undefined && data.desk.length < 3) {
-      throw new BadRequestError("Desk name must be at least 3 characters long");
+  async update(id: number, data: BookingUpdateInput): Promise<BookingWithId> {
+    try {
+      return await this.bookingRepository.update(id, data);
+    } catch (error) {
+      if (isMissingRecordError(error)) {
+        throw new NotFoundError("Booking not found");
+      }
+
+      throw error;
     }
-
-    const booking = this.bookingRepository.update(id, data);
-
-    if (!booking) {
-      throw new NotFoundError("Booking not found");
-    }
-
-    return booking;
   }
 
-  delete(id: string): BookingWithId {
-    const booking = this.bookingRepository.delete(id);
+  async delete(id: number): Promise<BookingWithId> {
+    try {
+      return await this.bookingRepository.delete(id);
+    } catch (error) {
+      if (isMissingRecordError(error)) {
+        throw new NotFoundError("Booking not found");
+      }
 
-    if (!booking) {
-      throw new NotFoundError("Booking not found");
+      throw error;
     }
-
-    return booking;
   }
 
-  getPaginatedShifts(page: number, limit: number): {
+  async getPaginatedShifts(page: number, limit: number): Promise<{
     data: BookingWithId[];
     meta: {
       page: number;
@@ -58,14 +63,14 @@ export class BookingService {
       total: number;
       totalPages: number;
     };
-  } {
+  }> {
     const safePage = Math.max(1, page);
     const safeLimit = Math.min(MAX_PAGE_SIZE, Math.max(1, limit));
-
-    const total = this.bookingRepository.count();
-    const totalPages = Math.max(1, Math.ceil(total / safeLimit));
     const skip = (safePage - 1) * safeLimit;
-    const data = this.bookingRepository.findPaginated(skip, safeLimit);
+    const [total, data] = await Promise.all([
+      this.bookingRepository.count(),
+      this.bookingRepository.findPaginated(skip, safeLimit),
+    ]);
 
     return {
       data,
@@ -73,7 +78,7 @@ export class BookingService {
         page: safePage,
         limit: safeLimit,
         total,
-        totalPages,
+        totalPages: Math.max(1, Math.ceil(total / safeLimit)),
       },
     };
   }

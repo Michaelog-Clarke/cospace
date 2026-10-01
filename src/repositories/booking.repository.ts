@@ -1,82 +1,41 @@
-import type { Booking, BookingWithId } from "../schemas/booking.schema.js";
+import type { Prisma } from "../generated/prisma/client.js";
+import { prisma } from "../utils/db.js";
 
-export type BookingInput = Booking;
+import type { BookingWithId } from "../schemas/booking.schema.js";
+
+export type BookingInput = Omit<Prisma.BookingUncheckedCreateInput, "id">;
+export type BookingUpdateInput = Prisma.BookingUncheckedUpdateInput;
 
 export class BookingRepository {
-  private readonly bookings: BookingWithId[];
-
-  constructor(initialBookings: BookingWithId[] = []) {
-    this.bookings = [...initialBookings];
+  findAll(): Promise<BookingWithId[]> {
+    return prisma.booking.findMany({ orderBy: { id: "asc" } });
   }
 
-  findAll(): BookingWithId[] {
-    return [...this.bookings];
+  findPaginated(skip: number, limit: number): Promise<BookingWithId[]> {
+    return prisma.booking.findMany({
+      skip: Math.max(0, skip),
+      take: Math.max(0, limit),
+      orderBy: { id: "asc" },
+    });
   }
 
-  findPaginated(skip: number, limit: number): BookingWithId[] {
-    const safeSkip = Math.max(0, skip);
-    const safeLimit = Math.max(0, limit);
-
-
-    return this.bookings.slice(safeSkip, safeSkip + safeLimit);
+  count(): Promise<number> {
+    return prisma.booking.count();
   }
 
-  count(): number {
-    return this.bookings.length;
+  findById(id: number): Promise<BookingWithId | null> {
+    return prisma.booking.findUnique({ where: { id } });
   }
 
-  findById(id: string): BookingWithId | undefined {
-    return this.bookings.find((booking) => booking.id === id);
+  create(data: BookingInput): Promise<BookingWithId> {
+    return prisma.booking.create({ data });
   }
 
-  create(booking: BookingInput): BookingWithId {
-    const highestId = this.bookings.reduce((max, item) => {
-      const numericId = Number(item.id);
-      return Number.isFinite(numericId) ? Math.max(max, numericId) : max;
-    }, 0);
-
-    const newBooking: BookingWithId = {
-      id: String(highestId + 1),
-      ...booking,
-    };
-
-    this.bookings.push(newBooking);
-
-    return newBooking;
+  update(id: number, data: BookingUpdateInput): Promise<BookingWithId> {
+    return prisma.booking.update({ where: { id }, data });
   }
 
-  update(id: string, data: Partial<BookingInput>): BookingWithId | undefined {
-    const index = this.bookings.findIndex((booking) => booking.id === id);
-
-    if (index === -1) {
-      return undefined;
-    }
-
-    const currentBooking = this.bookings[index];
-
-    if (!currentBooking) {
-      return undefined;
-    }
-
-    const updatedBooking: BookingWithId = {
-      ...currentBooking,
-      ...data,
-      id,
-    };
-
-    this.bookings[index] = updatedBooking;
-
-    return updatedBooking;
-  }
-
-  delete(id: string): BookingWithId | undefined {
-    const index = this.bookings.findIndex((booking) => booking.id === id);
-
-    if (index === -1) {
-      return undefined;
-    }
-
-    const [deletedBooking] = this.bookings.splice(index, 1);
-    return deletedBooking;
+  delete(id: number): Promise<BookingWithId> {
+    return prisma.booking.delete({ where: { id } });
   }
 }

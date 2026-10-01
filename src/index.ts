@@ -3,7 +3,9 @@ import express, { type Express, type Request, type Response } from "express";
 import { HTTP_STATUS } from "./constants/httpStatus.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { loggerMiddleware } from "./middleware/logger.js";
+import authRouter from "./routes/auth.routes.js";
 import bookingRouter from "./routes/booking.routes.js";
+require('dotenv').config();
 
 const app: Express = express();
 
@@ -18,6 +20,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use("/bookings", bookingRouter);
+app.use("/auth", authRouter);
 app.get("/boom-unexpected", () => {
   throw new Error("database connection failed");
 });
